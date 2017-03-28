@@ -37,7 +37,7 @@ Add the following to your build.gradle:
 	    }
 	}
 
-See `src/test/SampleApplication/app/build.gradle` for a complete working example.
+See [build.gradle](https://github.com/greensopinion/gradle-android-eclipse/blob/master/src/test/SampleApplication/app/build.gradle) for a complete working example.
 
 Then from the command-line run: 
 
