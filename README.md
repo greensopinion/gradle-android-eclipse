@@ -50,7 +50,7 @@ Add the following to your build.gradle:
 	        mavenCentral()
 	    }
 	    dependencies {
-	        classpath 'com.greensopinion:gradle-android-eclipse:0.2.0-SNAPSHOT'
+	        classpath 'com.greensopinion:gradle-android-eclipse:0.2.0'
 	    }
 	}
 
