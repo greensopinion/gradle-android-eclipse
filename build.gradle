@@ -1,0 +1,30 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile gradleApi()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'com.greensopinion'
+            artifactId 'gradle-android-eclipse'
+            version '0.2.0'
+
+            from components.java
+        }
+    }
+}
+
+eclipse {
+  classpath {
+    plusConfigurations += [ configurations.compile, configurations.testCompile ]
+    downloadSources = true
+  }
+}

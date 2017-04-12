@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.greensopinion.gradle.android.eclipse'
+apply plugin: 'com.greensopinion.android.eclipse'
 apply plugin: 'eclipse'
 
 android {
@@ -45,6 +45,6 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.greensopinion.gradle:android-eclipse:0.0.1-SNAPSHOT'
+        classpath 'com.greensopinion:gradle-android-eclipse:0.2.0'
     }
 }

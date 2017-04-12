@@ -3,7 +3,7 @@ Android Eclipse Generator
 
 A Gradle plug-in that enables generation of Eclipse project files (.project and .classpath) to enable use of the Eclipse IDE for Android projects.
 
-This generator works with the new [Android build system](http://tools.android.com/tech-docs/new-build-system). 
+This generator works with the new [Android build system](http://tools.android.com/tech-docs/new-build-system).
 
 Based on [this stack overflow](http://stackoverflow.com/questions/17470831/how-to-use-gradle-to-generate-eclipse-and-intellij-project-files-for-android-pro) by [Johannes Brodwall](http://stackoverflow.com/users/27658/johannes-brodwall).
 
@@ -26,23 +26,23 @@ Installation
 
 Download the sources, and then from the command-line run:
 
-    $ mvn install -Dgradle.home=/path/to/gradle/home
+    $ gradle publishToMavenLocal
 
 How to Use
 ==========
 
 Add the following to your build.gradle:
 
-    apply plugin: 'com.greensopinion.gradle.android.eclipse'
+    apply plugin: 'com.greensopinion.android.eclipse'
     apply plugin: 'eclipse'
-    
+
 	eclipse {
 	  classpath {
 	    plusConfigurations += [ configurations.compile, configurations.testCompile ]
 	    downloadSources = true
 	  }
 	}
-	
+
 	buildscript {
 	    repositories {
 	        mavenLocal()
@@ -50,13 +50,13 @@ Add the following to your build.gradle:
 	        mavenCentral()
 	    }
 	    dependencies {
-	        classpath 'com.greensopinion.gradle:android-eclipse:0.0.1-SNAPSHOT'
+	        classpath 'com.greensopinion:gradle-android-eclipse:0.2.0-SNAPSHOT'
 	    }
 	}
 
 See [build.gradle](https://github.com/greensopinion/gradle-android-eclipse/blob/master/src/test/SampleApplication/app/build.gradle) for a complete working example.
 
-Then from the command-line run: 
+Then from the command-line run:
 
     $ gradle eclipse
 
