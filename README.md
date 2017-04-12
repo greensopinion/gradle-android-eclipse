@@ -62,6 +62,13 @@ Then from the command-line run:
 
 When done, a `.classpath` and `.project` file should be in the current folder.
 
+Contributing
+============
+
+To open this project in Eclipse, first run the following:
+
+    $ gradle eclipse
+
 License
 =======
 
