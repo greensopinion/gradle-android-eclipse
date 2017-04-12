@@ -31,13 +31,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-eclipse {
-  classpath {
-    plusConfigurations += [ configurations.compile, configurations.testCompile ]
-    downloadSources = true
-  }
-}
-
 buildscript {
     repositories {
         mavenLocal()

@@ -21,10 +21,3 @@ publishing {
         }
     }
 }
-
-eclipse {
-  classpath {
-    plusConfigurations += [ configurations.compile, configurations.testCompile ]
-    downloadSources = true
-  }
-}

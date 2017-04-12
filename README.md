@@ -36,13 +36,6 @@ Add the following to your build.gradle:
     apply plugin: 'com.greensopinion.android.eclipse'
     apply plugin: 'eclipse'
 
-	eclipse {
-	  classpath {
-	    plusConfigurations += [ configurations.compile, configurations.testCompile ]
-	    downloadSources = true
-	  }
-	}
-
 	buildscript {
 	    repositories {
 	        mavenLocal()
