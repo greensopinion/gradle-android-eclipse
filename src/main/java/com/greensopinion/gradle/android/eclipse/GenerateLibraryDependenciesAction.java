@@ -21,7 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -88,16 +88,28 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 						format("Cannot explode aar: {0}: {1}", e.getMessage(), aarFile.getAbsolutePath()), e);
 			}
 		}
-		File[] files = targetFolder.listFiles();
-		if (files != null) {
-			FileReferenceFactory fileReferenceFactory = new FileReferenceFactory();
-			return Arrays.asList(files).stream().filter(f -> f.getName().endsWith(".jar")).map(f -> {
-				Library library = new Library(fileReferenceFactory.fromFile(f));
-				library.setSourcePath(aarLibrary.getSourcePath());
-				return library;
-			});
+		List<File> files = listFilesTraversingFolders(targetFolder);
+		FileReferenceFactory fileReferenceFactory = new FileReferenceFactory();
+		return files.stream().filter(f -> f.getName().endsWith(".jar")).map(f -> {
+			Library library = new Library(fileReferenceFactory.fromFile(f));
+			library.setSourcePath(aarLibrary.getSourcePath());
+			return library;
+		});
+	}
+
+	private List<File> listFilesTraversingFolders(File folder) {
+		List<File> files = new ArrayList<>();
+		File[] children = folder.listFiles();
+		if (children != null) {
+			for (File child : children) {
+				if (child.isFile()) {
+					files.add(child);
+				} else if (child.isDirectory()) {
+					files.addAll(listFilesTraversingFolders(child));
+				}
+			}
 		}
-		return Stream.empty();
+		return files;
 	}
 
 	private void ensureParentFolderExists(File targetFile) {
