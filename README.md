@@ -21,30 +21,30 @@ This plug-in hooks into the [Gradle eclipse plugin](https://docs.gradle.org/curr
     * each aar-packaged jar is added to the `.classpath`
  * Adds the Android SDK to the `.classpath`
 
-Installation
-============
-
-Download the sources, and then from the command-line run:
-
-    $ gradle publishToMavenLocal
-
 How to Use
 ==========
 
 Add the following to your build.gradle:
 
-    apply plugin: 'com.greensopinion.android.eclipse'
+    apply plugin: 'com.greensopinion.gradle-android-eclipse'
     apply plugin: 'eclipse'
 
 	buildscript {
 	    repositories {
-	        mavenLocal()
-	        jcenter()
-	        mavenCentral()
+	        maven {
+	          url "https://plugins.gradle.org/m2/"
+	        }
 	    }
 	    dependencies {
-	        classpath 'com.greensopinion:gradle-android-eclipse:0.2.0'
+	      classpath "gradle.plugin.com.greensopinion.gradle-android-eclipse:android-eclipse:0.2.2"
 	    }
+	}
+	
+	eclipse {
+	  classpath {
+	    plusConfigurations += [ configurations.compile, configurations.testCompile ]
+	    downloadSources = true
+	  }
 	}
 
 See [build.gradle](https://github.com/greensopinion/gradle-android-eclipse/blob/master/src/test/SampleApplication/app/build.gradle) for a complete working example.
