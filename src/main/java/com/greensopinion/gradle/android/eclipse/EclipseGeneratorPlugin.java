@@ -19,22 +19,28 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
+import org.slf4j.Logger;
 
 import groovy.lang.MissingPropertyException;
 
 public class EclipseGeneratorPlugin implements Plugin<Project> {
 	@Override
 	public void apply(Project project) {
+		Logger logger = Log.log();
 		project.afterEvaluate(new Action<Project>() {
 
 			@Override
 			public void execute(Project project) {
+				logger.info("Updating eclipse model with Android dependencies");
+
 				EclipseModel eclipseModel = eclipseModel(project);
 				eclipseModel.getClasspath().getFile().beforeMerged(new AddSourceFoldersAction());
 				eclipseModel.getClasspath().getFile().whenMerged(new GenerateLibraryDependenciesAction(project));
 				eclipseModel.getClasspath().getFile().whenMerged(new AndroidSdkLibraryDependenciesAction(project));
 
 				project.getTasksByName("eclipseClasspath", false).forEach(t -> t.dependsOn("generateDebugSources"));
+
+				logger.info("Android dependencies done");
 			}
 		});
 

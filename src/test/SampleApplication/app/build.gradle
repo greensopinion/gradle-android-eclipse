@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.greensopinion.android.eclipse'
+apply plugin: 'com.greensopinion.gradle-android-eclipse'
 apply plugin: 'eclipse'
 
 android {
@@ -33,11 +33,18 @@ dependencies {
 
 buildscript {
     repositories {
-        mavenLocal()
-        jcenter()
-        mavenCentral()
+        maven {
+          url "https://plugins.gradle.org/m2/"
+        }
     }
     dependencies {
-        classpath 'com.greensopinion:gradle-android-eclipse:0.2.0'
+      classpath "gradle.plugin.com.greensopinion.gradle-android-eclipse:android-eclipse:0.2.2"
     }
+}
+
+eclipse {
+  classpath {
+    plusConfigurations += [ configurations.compile, configurations.testCompile ]
+    downloadSources = true
+  }
 }

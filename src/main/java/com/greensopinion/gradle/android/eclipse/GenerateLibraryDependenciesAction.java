@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -44,8 +45,12 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 
 	@Override
 	public void execute(Classpath classpath) {
-		classpath.setEntries(
-				classpath.getEntries().stream().flatMap(entry -> mapToJars(entry)).collect(Collectors.toList()));
+		List<ClasspathEntry> entries = classpath.getEntries().stream().flatMap(entry -> mapToJars(entry))
+				.collect(Collectors.toList());
+		entries.forEach(entry -> {
+			Log.log().info("Adding Android classpath entry: " + entry.toString());
+		});
+		classpath.setEntries(entries);
 	}
 
 	private Stream<ClasspathEntry> mapToJars(ClasspathEntry entry) {

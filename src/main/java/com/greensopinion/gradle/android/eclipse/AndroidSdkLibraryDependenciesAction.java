@@ -33,6 +33,7 @@ public class AndroidSdkLibraryDependenciesAction implements Action<Classpath> {
 
 	@Override
 	public void execute(Classpath classpath) {
+		Log.log().info("Adding Android SDK classpath entry");
 		classpath.getEntries().add(androidSdkEntry());
 	}
 
