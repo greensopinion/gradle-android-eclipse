@@ -1,23 +1,41 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'com.gradle.plugin-publish'
 
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 dependencies {
     compile gradleApi()
 }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId 'com.greensopinion'
-            artifactId 'gradle-android-eclipse'
-            version '0.2.0'
+version="0.2"
 
-            from components.java
-        }
+pluginBundle {
+  website='https://github.com/greensopinion/gradle-android-eclipse'
+  vcsUrl='https://github.com/greensopinion/gradle-android-eclipse.git'
+  description='A Gradle plug-in that enables generation of Eclipse project files (.project and .classpath) to enable use of the Eclipse IDE for Android projects.  Correctly adds Android AAR dependencies to the classpath, works with the new Android build system.'
+  tags=['Android','aar','Eclipse','ide']
+
+
+  plugins {
+    androidEclipsePlugin {
+      id = 'com.greensopinion.gradle-android-eclipse'
+      displayName = 'Android Eclipse plugin'
     }
+  }
+
+}
+
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+    dependencies {
+      classpath "com.gradle.publish:plugin-publish-plugin:0.9.7"
+    }
+  }
 }
