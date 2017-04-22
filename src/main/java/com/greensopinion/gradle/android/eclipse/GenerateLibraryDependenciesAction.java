@@ -75,6 +75,7 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 				zipFile.stream().forEach(e -> {
 					if (e.getName().endsWith(".jar")) {
 						File targetFile = new File(targetFolder, e.getName());
+						ensureParentFolderExists(targetFile);
 						int index = 1;
 						while (targetFile.exists()) {
 							targetFile = new File(targetFolder, format("{0}_{1}", ++index, e.getName()));
@@ -97,6 +98,15 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 			});
 		}
 		return Stream.empty();
+	}
+
+	private void ensureParentFolderExists(File targetFile) {
+		File parentFolder = targetFile.getParentFile();
+		if (!parentFolder.exists()) {
+			if (!parentFolder.mkdirs()) {
+				throw new RuntimeException(format("Cannot create folder: {0}", parentFolder.getAbsolutePath()));
+			}
+		}
 	}
 
 	private void copy(ZipFile zipFile, File targetFile, ZipEntry entry) {

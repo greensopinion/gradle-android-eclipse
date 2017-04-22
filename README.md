@@ -36,7 +36,7 @@ Add the following to your build.gradle:
 	        }
 	    }
 	    dependencies {
-	      classpath "gradle.plugin.com.greensopinion.gradle-android-eclipse:android-eclipse:0.2.2"
+	      classpath "gradle.plugin.com.greensopinion.gradle-android-eclipse:android-eclipse:0.2.3"
 	    }
 	}
 	
