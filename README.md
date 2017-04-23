@@ -36,10 +36,10 @@ Add the following to your build.gradle:
 	        }
 	    }
 	    dependencies {
-	      classpath "gradle.plugin.com.greensopinion.gradle-android-eclipse:android-eclipse:0.2.4"
+	      classpath "gradle.plugin.com.greensopinion.gradle-android-eclipse:android-eclipse:1.0"
 	    }
 	}
-	
+
 	eclipse {
 	  classpath {
 	    plusConfigurations += [ configurations.compile, configurations.testCompile ]
