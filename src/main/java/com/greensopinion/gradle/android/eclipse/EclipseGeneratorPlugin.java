@@ -15,44 +15,22 @@
  */
 package com.greensopinion.gradle.android.eclipse;
 
-import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.plugins.ide.eclipse.model.EclipseModel;
-import org.slf4j.Logger;
 
-import groovy.lang.MissingPropertyException;
 
 public class EclipseGeneratorPlugin implements Plugin<Project> {
+	
+	public static final String PLUGIN_NAME = "androidEclipse";
+	public static final String MAIN_TASK_NAME = "androidEclipse";
+	
+	public static final String DEFAULT_SRC_DIR = "src/main/java";
+	public static final String DEFAULT_AAR_EXPLODED_DIR = "build/exploded-aars";
+	
 	@Override
 	public void apply(Project project) {
-		Logger logger = Log.log();
-		project.afterEvaluate(new Action<Project>() {
-
-			@Override
-			public void execute(Project project) {
-				logger.info("Updating eclipse model with Android dependencies");
-
-				EclipseModel eclipseModel = eclipseModel(project);
-				eclipseModel.getClasspath().getFile().beforeMerged(new AddSourceFoldersAction());
-				eclipseModel.getClasspath().getFile().whenMerged(new GenerateLibraryDependenciesAction(project));
-				eclipseModel.getClasspath().getFile().whenMerged(new AndroidSdkLibraryDependenciesAction(project));
-
-				project.getTasksByName("eclipseClasspath", false).forEach(t -> t.dependsOn("generateDebugSources"));
-
-				logger.info("Android dependencies done");
-			}
-		});
-
+		project.getExtensions().create(PLUGIN_NAME, AndroidEclipseExtension.class);
+		project.getTasks().create(MAIN_TASK_NAME, AndroidEclipseTask.class);
 	}
 
-	private EclipseModel eclipseModel(Project project) {
-		try {
-			return (EclipseModel) project.property("eclipse");
-		} catch (MissingPropertyException e) {
-			throw new RuntimeException(
-					"Cannot find 'eclipse' property.\nEnsure that the following is in your project: \n\napply plugin: 'eclipse'\n\n",
-					e);
-		}
-	}
 }
