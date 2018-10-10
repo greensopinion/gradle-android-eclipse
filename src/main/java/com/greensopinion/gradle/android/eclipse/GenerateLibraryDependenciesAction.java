@@ -38,9 +38,11 @@ import org.gradle.plugins.ide.eclipse.model.internal.FileReferenceFactory;
 public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 
 	private final Project project;
+	private AndroidEclipseExtension ext;
 
-	public GenerateLibraryDependenciesAction(Project project) {
+	public GenerateLibraryDependenciesAction(Project project, AndroidEclipseExtension ext) {
 		this.project = project;
+		this.ext = ext;
 	}
 
 	@Override
@@ -65,8 +67,14 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 
 	private Stream<ClasspathEntry> explodeAarJarFiles(Library aarLibrary) {
 		File aarFile = new File(aarLibrary.getPath());
-    String jarId = aarLibrary.getModuleVersion().toString().replaceAll(":", "-");
-    File targetFolder = new File(new File(new File(project.getProjectDir(), "build"), "exploded-aars"), jarId);
+		String jarId = aarLibrary.getModuleVersion().toString().replaceAll(":", "-");
+		
+		String aarDir = EclipseGeneratorPlugin.DEFAULT_AAR_EXPLODED_DIR;
+		if (ext != null && ext.aarOutputDir != null) {
+			aarDir = ext.aarOutputDir;
+		}
+		File targetFolder = new File(new File(project.getProjectDir(), aarDir), jarId);
+		
 		if (!targetFolder.exists()) {
 			if (!targetFolder.mkdirs()) {
 				throw new RuntimeException(format("Cannot create folder: {0}", targetFolder.getAbsolutePath()));
@@ -74,7 +82,7 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 			try (ZipFile zipFile = new ZipFile(aarFile)) {
 				zipFile.stream().forEach(f -> {
 					if (f.getName().endsWith(".jar")) {
-            String targetName = jarId + ".jar";
+						String targetName = jarId + ".jar";
 						File targetFile = new File(targetFolder, targetName);
 						ensureParentFolderExists(targetFile);
 						int index = 1;
@@ -89,10 +97,18 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 						format("Cannot explode aar: {0}: {1}", e.getMessage(), aarFile.getAbsolutePath()), e);
 			}
 		}
+
 		List<File> files = listFilesTraversingFolders(targetFolder);
 		FileReferenceFactory fileReferenceFactory = new FileReferenceFactory();
+
 		return files.stream().filter(f -> f.getName().endsWith(".jar")).map(f -> {
 			Library library = new Library(fileReferenceFactory.fromFile(f));
+			
+			String rootPath = project.getProjectDir().getAbsolutePath().replaceAll("\\\\", "/");
+			String localPath = library.getPath().replace(rootPath, "");
+			if (localPath.charAt(0) == '/') localPath = localPath.substring(1);
+			library.setPath(localPath);
+			
 			library.setSourcePath(aarLibrary.getSourcePath());
 			return library;
 		});

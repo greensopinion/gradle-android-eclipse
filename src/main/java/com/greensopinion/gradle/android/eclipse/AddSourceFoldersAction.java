@@ -20,11 +20,23 @@ import org.gradle.plugins.ide.eclipse.model.Classpath;
 import org.gradle.plugins.ide.eclipse.model.SourceFolder;
 
 public class AddSourceFoldersAction implements Action<Classpath> {
-
+	
+	private AndroidEclipseExtension ext;
+	
+	public AddSourceFoldersAction(AndroidEclipseExtension ext) {
+		this.ext = ext;
+	}
+	
 	@Override
 	public void execute(Classpath classpath) {
 		Log.log().info("Adding Android source folders");
-		classpath.getEntries().add(new SourceFolder("src/main/java", "bin"));
+		
+		String srcDir = EclipseGeneratorPlugin.DEFAULT_SRC_DIR;
+		if (ext != null && ext.srcDir != null) {
+			srcDir = ext.srcDir;
+		}
+		
+		classpath.getEntries().add(new SourceFolder(srcDir, "bin"));
 		classpath.getEntries().add(new SourceFolder("build/generated/source/r/debug", "bin"));
 		classpath.getEntries().add(new SourceFolder("build/generated/source/buildConfig/debug", "bin"));
 		classpath.getEntries().add(new SourceFolder("build/generated/source/aidl/debug", "bin"));
