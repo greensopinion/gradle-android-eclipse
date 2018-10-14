@@ -65,22 +65,23 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 
 	private Stream<ClasspathEntry> explodeAarJarFiles(Library aarLibrary) {
 		File aarFile = new File(aarLibrary.getPath());
-		File targetFolder = new File(new File(new File(project.getProjectDir(), "build"), "exploded-aars"),
-				aarFile.getName());
+		String jarId = aarLibrary.getModuleVersion().toString().replaceAll(":", "-");
+		File targetFolder = new File(new File(new File(project.getProjectDir(), "build"), "exploded-aars"), jarId);
 		if (!targetFolder.exists()) {
 			if (!targetFolder.mkdirs()) {
 				throw new RuntimeException(format("Cannot create folder: {0}", targetFolder.getAbsolutePath()));
 			}
 			try (ZipFile zipFile = new ZipFile(aarFile)) {
-				zipFile.stream().forEach(e -> {
-					if (e.getName().endsWith(".jar")) {
-						File targetFile = new File(targetFolder, e.getName());
+				zipFile.stream().forEach(f -> {
+					if (f.getName().endsWith(".jar")) {
+						String targetName = jarId + ".jar";
+						File targetFile = new File(targetFolder, targetName);
 						ensureParentFolderExists(targetFile);
 						int index = 1;
 						while (targetFile.exists()) {
-							targetFile = new File(targetFolder, format("{0}_{1}", ++index, e.getName()));
+							targetFile = new File(targetFolder, format("{0}_{1}", ++index, targetName));
 						}
-						copy(zipFile, targetFile, e);
+						copy(zipFile, targetFile, f);
 					}
 				});
 			} catch (IOException e) {
