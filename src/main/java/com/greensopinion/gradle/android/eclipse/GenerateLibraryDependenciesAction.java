@@ -21,7 +21,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,7 +31,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.gradle.api.Action;
-import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.plugins.ide.eclipse.model.Classpath;
 import org.gradle.plugins.ide.eclipse.model.ClasspathEntry;
 import org.gradle.plugins.ide.eclipse.model.Library;
@@ -37,14 +39,37 @@ import org.gradle.plugins.ide.eclipse.model.internal.FileReferenceFactory;
 
 public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 
-	private final Project project;
+    private final AndroidModel android;
 
-	public GenerateLibraryDependenciesAction(Project project) {
-		this.project = project;
+    public GenerateLibraryDependenciesAction(AndroidModel android) {
+        this.android = android;
 	}
 
 	@Override
 	public void execute(Classpath classpath) {
+        FileReferenceFactory fileReferenceFactory = new FileReferenceFactory();
+        Configuration conf = android.getConfiguration();
+        if (conf == null) {
+            return;
+        }
+        conf.getIncoming().getFiles().forEach(dependency -> {
+//            System.out.println(dependency);
+            try {
+                Library library = new Library(fileReferenceFactory.fromPath(dependency.toString()));
+                Path versionDir = dependency.toPath().getParent().getParent();
+                Iterator<Path> it = Files.walk(versionDir).iterator();
+                while (it.hasNext()) {
+                    String each = it.next().toString();
+                    if (each.endsWith("-sources.jar")) {
+                        library.setSourcePath(fileReferenceFactory.fromPath(each));
+                        break;
+                    }
+                }
+                classpath.getEntries().add(library);
+            } catch (IOException e) {
+                System.err.println(e);
+            }
+        });
 		List<ClasspathEntry> entries = classpath.getEntries().stream().flatMap(entry -> mapToJars(entry))
 				.collect(Collectors.toList());
 		entries.forEach(entry -> {
@@ -65,8 +90,9 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 
 	private Stream<ClasspathEntry> explodeAarJarFiles(Library aarLibrary) {
 		File aarFile = new File(aarLibrary.getPath());
-		String jarId = aarLibrary.getModuleVersion().toString().replaceAll(":", "-");
-		File targetFolder = new File(new File(new File(project.getProjectDir(), "build"), "exploded-aars"), jarId);
+        String groupName = aarFile.getParentFile().getParentFile().getParentFile().getParentFile().getName();
+        String jarId = groupName + "-" + aarFile.getName();
+        File targetFolder = new File(new File(new File(android.getProjectDir(), "build"), "exploded-aars"), jarId);
 		if (!targetFolder.exists()) {
 			if (!targetFolder.mkdirs()) {
 				throw new RuntimeException(format("Cannot create folder: {0}", targetFolder.getAbsolutePath()));
@@ -74,7 +100,7 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 			try (ZipFile zipFile = new ZipFile(aarFile)) {
 				zipFile.stream().forEach(f -> {
 					if (f.getName().endsWith(".jar")) {
-						String targetName = jarId + ".jar";
+                        String targetName = jarId.replace(".aar", "-") + f.getName();
 						File targetFile = new File(targetFolder, targetName);
 						ensureParentFolderExists(targetFile);
 						int index = 1;

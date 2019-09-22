@@ -15,44 +15,39 @@
  */
 package com.greensopinion.gradle.android.eclipse;
 
-import java.lang.reflect.InvocationTargetException;
-
 import org.gradle.api.Action;
-import org.gradle.api.Project;
 import org.gradle.plugins.ide.eclipse.model.Classpath;
 import org.gradle.plugins.ide.eclipse.model.ClasspathEntry;
-import org.gradle.plugins.ide.eclipse.model.Variable;
+import org.gradle.plugins.ide.eclipse.model.Library;
 import org.gradle.plugins.ide.eclipse.model.internal.FileReferenceFactory;
 
 public class AndroidSdkLibraryDependenciesAction implements Action<Classpath> {
-	private final Project project;
+    private final AndroidModel android;
 
-	public AndroidSdkLibraryDependenciesAction(Project project) {
-		this.project = project;
-	}
+    public AndroidSdkLibraryDependenciesAction(AndroidModel android) {
+        this.android = android;
+    }
 
-	@Override
-	public void execute(Classpath classpath) {
-		Log.log().info("Adding Android SDK classpath entry");
-		classpath.getEntries().add(androidSdkEntry());
-	}
+    @Override
+    public void execute(Classpath classpath) {
+        Log.log().info("Adding Android SDK classpath entry");
+        classpath.getEntries().add(androidSdkEntry());
+    }
 
-	private ClasspathEntry androidSdkEntry() {
-		FileReferenceFactory fileReferenceFactory = new FileReferenceFactory();
-		Object compileSdkVersion = compileSdkVersion();
-		Variable variable = new Variable(
-				fileReferenceFactory.fromPath("ANDROID_HOME/platforms/" + compileSdkVersion + "/android.jar"));
-		variable.setSourcePath(fileReferenceFactory.fromPath("ANDROID_HOME/sources/" + compileSdkVersion));
-		return variable;
-	}
-
-	private Object compileSdkVersion() {
-		Object android = project.property("android");
-		try {
-			return android.getClass().getMethod("getCompileSdkVersion").invoke(android);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
-				| SecurityException e) {
-			throw new RuntimeException("Cannot get 'compileSdkVersion' property of 'android'.", e);
-		}
-	}
+    private ClasspathEntry androidSdkEntry() {
+        FileReferenceFactory fileReferenceFactory = new FileReferenceFactory();
+        Object compileSdkVersion = android.getCompileSdkVersion();
+//        if (android.getSdkDirectory() != null) {
+        Library library = new Library(fileReferenceFactory
+                .fromPath(android.getSdkDirectory() + "/platforms/" + compileSdkVersion + "/android.jar"));
+        library.setSourcePath(
+                fileReferenceFactory.fromPath(android.getSdkDirectory() + "/sources/" + compileSdkVersion));
+        return library;
+//        } else {
+//            Variable variable = new Variable(
+//                    fileReferenceFactory.fromPath("ANDROID_HOME/platforms/" + compileSdkVersion + "/android.jar"));
+//            variable.setSourcePath(fileReferenceFactory.fromPath("ANDROID_HOME/sources/" + compileSdkVersion));
+//            return variable;
+//        }
+    }
 }

@@ -15,10 +15,19 @@
  */
 package com.greensopinion.gradle.android.eclipse;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Iterator;
+import java.util.List;
+
 import org.gradle.api.Action;
+import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
+import org.gradle.plugins.ide.eclipse.model.EclipseProject;
 import org.slf4j.Logger;
 
 import groovy.lang.MissingPropertyException;
@@ -34,14 +43,70 @@ public class EclipseGeneratorPlugin implements Plugin<Project> {
 				logger.info("Updating eclipse model with Android dependencies");
 
 				EclipseModel eclipseModel = eclipseModel(project);
-				eclipseModel.getClasspath().getFile().beforeMerged(new AddSourceFoldersAction());
-				eclipseModel.getClasspath().getFile().whenMerged(new GenerateLibraryDependenciesAction(project));
-				eclipseModel.getClasspath().getFile().whenMerged(new AndroidSdkLibraryDependenciesAction(project));
+                configureDownloadSources(eclipseModel);
+                configureOutputBin(eclipseModel);
+                configureJavaEight(eclipseModel);
+                renameSubproject(eclipseModel);
 
-				project.getTasksByName("eclipseClasspath", false).forEach(t -> t.dependsOn("generateDebugSources"));
+                AndroidModel android = new AndroidModel(project);
+                eclipseModel.getClasspath().getFile().beforeMerged(new AddSourceFoldersAction(android));
+                eclipseModel.getClasspath().getFile().whenMerged(new GenerateLibraryDependenciesAction(android));
+                eclipseModel.getClasspath().getFile().whenMerged(new AndroidSdkLibraryDependenciesAction(android));
+                enableTriggerOnGenerateSources(project);
 
 				logger.info("Android dependencies done");
 			}
+
+            private void configureDownloadSources(EclipseModel eclipseModel) {
+                eclipseModel.getClasspath().setDownloadSources(true);
+            }
+
+            private void configureOutputBin(EclipseModel eclipseModel) {
+                eclipseModel.getClasspath().setDefaultOutputDir(new File(project.getProjectDir(), "bin"));
+            }
+
+            private void configureJavaEight(EclipseModel eclipseModel) {
+                eclipseModel.getJdt().setSourceCompatibility(JavaVersion.VERSION_1_8);
+                eclipseModel.getJdt().setTargetCompatibility(JavaVersion.VERSION_1_8);
+            }
+
+            private void renameSubproject(EclipseModel eclipseModel) {
+                EclipseProject eclipseProject = eclipseModel.getProject();
+                File parentDir = project.getProjectDir().getParentFile();
+                File parentSettings = new File(parentDir, "settings.gradle");
+                if (parentSettings.isFile()) {
+                    removeBuildshipNatureToAvoidFightingWithName(eclipseProject);
+                    String reference = String.format("':%s'", project.getName());
+                    try {
+                        for(Iterator<String> it = Files.lines(parentSettings.toPath(), StandardCharsets.UTF_8)
+                                .iterator(); it.hasNext();) {
+                            String each = it.next();
+                            if (each.startsWith("include ") && each.contains(reference)) {
+                                String subprojectName = parentDir.getName() + "-" + eclipseProject.getName();
+                                eclipseProject.setName(subprojectName);
+                                break;
+                            }
+                        }
+                    } catch (IOException e) {
+                        System.err.println(e);
+                    }
+                }
+            }
+
+            private void removeBuildshipNatureToAvoidFightingWithName(EclipseProject eclipseProject) {
+                List<String> natures = eclipseProject.getNatures();
+                natures.remove("org.eclipse.buildship.core.gradleprojectnature");
+                eclipseProject.setNatures(natures);
+            }
+
+            private void enableTriggerOnGenerateSources(Project project) {
+                project.getTasks().forEach(task -> {
+                    String name = task.getName();
+                    if (name.startsWith("generate") && name.endsWith("ebugSources")) {
+                        project.getTasksByName("eclipseClasspath", false).forEach(t -> t.dependsOn(name));
+                    }
+                });
+            }
 		});
 
 	}

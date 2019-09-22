@@ -4,14 +4,65 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.gradle.plugin-publish'
 
 repositories {
+    google()
     jcenter()
 }
 
 dependencies {
     compile gradleApi()
+    compile 'com.android.tools.build:gradle-api:2.3.0'
 }
 
-version="1.1"
+apply plugin: 'java'
+compileJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
+
+apply plugin: 'eclipse'
+eclipse {
+    classpath {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+/*
+ * Sources for the gradle-api, needs an -all Zip in gradle-wrapper.properties 
+ * and run ./gradlew wrapper --gradle-version=5.5.1 --distribution-type=all, 
+ * then run ./gradlew eclipse
+ *
+ * see: https://stackoverflow.com/a/25305938
+ */
+wrapper {
+    distributionType = Wrapper.DistributionType.ALL
+}
+plugins.withType(EclipsePlugin) {
+    plugins.withType(JavaBasePlugin) {
+        eclipse {
+            classpath {
+                file {
+                    whenMerged { classpath ->
+                        String gradleHome = gradle.getGradleHomeDir()
+                                .absolutePath
+                                .replace(File.separator, '/')
+                        String gradleSourceDirectory = "${gradleHome}/src"
+//                        println gradleSourceDirectory
+                        classpath.entries.each { entry ->
+                            if (entry in org.gradle.plugins.ide.eclipse.model.AbstractLibrary
+                            && entry.library.path.contains('generated-gradle-jars')) {
+                                entry.sourcePath =
+                                        new org.gradle.plugins.ide.eclipse.model.internal.FileReferenceFactory()
+                                        .fromPath(gradleSourceDirectory)
+//                                println entry
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+version="1.2"
 
 pluginBundle {
   website='https://github.com/greensopinion/gradle-android-eclipse'
