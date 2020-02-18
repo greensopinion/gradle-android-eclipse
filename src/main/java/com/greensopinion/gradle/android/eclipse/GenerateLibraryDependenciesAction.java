@@ -59,7 +59,6 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 	}
 
 	private String toVersionId(Library library) {
-		Log.log().info(" ----> library: " + library.getPath() +" VERSION: "+library.getModuleVersion());
 		return library.getModuleVersion().toString().replaceAll(":", "-");
 	}
 

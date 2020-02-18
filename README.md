@@ -14,12 +14,14 @@ This plug-in hooks into the [Gradle eclipse plugin](https://docs.gradle.org/curr
 
  * Adds the following Android source paths:
     * `src/main/java`
-    * `build/generated/source/r/debug`
+    * `src/test/java`
+    * `src/main/resources`
     * `build/generated/source/buildConfig/debug`
-    * `build/generated/source/aidl/debug`
+    * `build/generated/not_namespaced_r_class_sources/debug/r`
  * For any dependency packaged as an aar ([Android Archive](https://developer.android.com/studio/projects/android-library.html)), the aar is extracted into `build/exploded-aars`
     * each aar-packaged jar is added to the `.classpath`
  * Adds the Android SDK to the `.classpath`
+ * Updates the Eclipse project compiler settings to match the `android.compileOptions` in the gradle build
 
 How to Use
 ==========
