@@ -5,3 +5,8 @@ build
 .classpath
 .project
 .settings
+gradle
+gradlew*
+local.properties
+.idea
+gradle-android-eclipse.iml

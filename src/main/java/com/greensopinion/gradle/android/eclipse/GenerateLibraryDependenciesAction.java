@@ -21,8 +21,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -37,6 +41,7 @@ import org.gradle.plugins.ide.eclipse.model.internal.FileReferenceFactory;
 
 public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 
+	public static final String ECLIPSE_FILES = "eclipse_dependencies";
 	private final Project project;
 
 	public GenerateLibraryDependenciesAction(Project project) {
@@ -53,6 +58,17 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 		classpath.setEntries(entries);
 	}
 
+	private String toVersionId(Library library) {
+		Log.log().info(" ----> library: " + library.getPath() +" VERSION: "+library.getModuleVersion());
+		return library.getModuleVersion().toString().replaceAll(":", "-");
+	}
+
+	private File toTargetFolder(Library library) {
+		File aarFile = new File(library.getPath());
+		String jarId = toVersionId(library);
+		return new File(new File(project.getProjectDir(), ECLIPSE_FILES), jarId);
+	}
+
 	private Stream<ClasspathEntry> mapToJars(ClasspathEntry entry) {
 		if (entry instanceof Library) {
 			Library library = (Library) entry;
@@ -65,16 +81,16 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 
 	private Stream<ClasspathEntry> explodeAarJarFiles(Library aarLibrary) {
 		File aarFile = new File(aarLibrary.getPath());
-		String jarId = aarLibrary.getModuleVersion().toString().replaceAll(":", "-");
-		File targetFolder = new File(new File(new File(project.getProjectDir(), "build"), "exploded-aars"), jarId);
+		File targetFolder = toTargetFolder(aarLibrary);
 		if (!targetFolder.exists()) {
 			if (!targetFolder.mkdirs()) {
 				throw new RuntimeException(format("Cannot create folder: {0}", targetFolder.getAbsolutePath()));
 			}
 			try (ZipFile zipFile = new ZipFile(aarFile)) {
 				zipFile.stream().forEach(f -> {
-					if (f.getName().endsWith(".jar")) {
-						String targetName = jarId + ".jar";
+					String name = f.getName();
+					if (name.endsWith(".jar")) {
+						String targetName = toFilename(name);
 						File targetFile = new File(targetFolder, targetName);
 						ensureParentFolderExists(targetFile);
 						int index = 1;
@@ -96,6 +112,11 @@ public class GenerateLibraryDependenciesAction implements Action<Classpath> {
 			library.setSourcePath(aarLibrary.getSourcePath());
 			return library;
 		});
+	}
+
+	private String toFilename(String path) {
+		String[] segments = Pattern.compile("/|\\\\").split(path);
+		return segments[segments.length-1];
 	}
 
 	private List<File> listFilesTraversingFolders(File folder) {

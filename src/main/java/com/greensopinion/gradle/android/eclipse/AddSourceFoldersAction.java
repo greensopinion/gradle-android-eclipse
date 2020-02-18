@@ -17,16 +17,30 @@ package com.greensopinion.gradle.android.eclipse;
 
 import org.gradle.api.Action;
 import org.gradle.plugins.ide.eclipse.model.Classpath;
+import org.gradle.plugins.ide.eclipse.model.ClasspathEntry;
 import org.gradle.plugins.ide.eclipse.model.SourceFolder;
 
 public class AddSourceFoldersAction implements Action<Classpath> {
 
+	public static final String OUTPUT_FOLDER = "bin";
+	public static final String TEST_OUTPUT_FOLDER = "bin-test";
+
 	@Override
 	public void execute(Classpath classpath) {
 		Log.log().info("Adding Android source folders");
-		classpath.getEntries().add(new SourceFolder("src/main/java", "bin"));
-		classpath.getEntries().add(new SourceFolder("build/generated/source/r/debug", "bin"));
-		classpath.getEntries().add(new SourceFolder("build/generated/source/buildConfig/debug", "bin"));
-		classpath.getEntries().add(new SourceFolder("build/generated/source/aidl/debug", "bin"));
+		classpath.getEntries().add(sourceFolder("src/main/java"));
+		classpath.getEntries().add(testSourceFolder("src/test/java"));
+		classpath.getEntries().add(testSourceFolder("src/test/resources"));
+		classpath.getEntries().add(sourceFolder("build/generated/source/buildConfig/debug"));
+		classpath.getEntries().add(sourceFolder("build/generated/not_namespaced_r_class_sources/debug/r"));
+	}
+
+	private ClasspathEntry sourceFolder(String path) {
+		return new SourceFolder(path, OUTPUT_FOLDER);
+	}
+	private ClasspathEntry testSourceFolder(String path) {
+		SourceFolder entry = new SourceFolder(path, TEST_OUTPUT_FOLDER);
+		entry.getEntryAttributes().put("test","true");
+		return entry;
 	}
 }
